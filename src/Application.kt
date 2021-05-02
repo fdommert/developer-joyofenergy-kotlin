@@ -13,7 +13,8 @@ import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.application.install
-import io.ktor.features.ContentNegotiation
+import io.ktor.features.*
+import io.ktor.http.*
 import io.ktor.jackson.jackson
 import io.ktor.request.receive
 import io.ktor.response.respond
@@ -40,6 +41,14 @@ fun Application.module(testing: Boolean = false) {
         jackson {
             setup()
         }
+    }
+
+    install(CORS) {
+        method(HttpMethod.Options)
+        header(HttpHeaders.XForwardedProto)
+        anyHost()
+        allowCredentials = true
+        allowNonSimpleContentTypes = true
     }
 
     val meterReadingsService = MeterReadingService(mutableMapOf())

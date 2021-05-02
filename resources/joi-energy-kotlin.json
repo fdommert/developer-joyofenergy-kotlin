@@ -1,0 +1,234 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "JOI Energy",
+    "version": "1.0"
+  },
+  "components": {
+    "responses": {
+      "EpochMeterReadingResponse": {
+        "description": "The reading of a smart meter at certain point in epoch time format.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/EpochElectricityReading"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "PricePlanRecommendation": {
+        "type":"object",
+        "properties": {
+          "first": {
+            "type": "string"
+          },
+          "second": {
+            "type": "integer"
+          }
+        }
+      },
+      "PricePlanComparison": {
+        "type":"object",
+        "properties": {
+          "smartMeterId": {
+            "type": "string"
+          },
+          "pricePlanComparisons": {
+            "type": "object",
+            "additionalProperties" :{
+              "$ref": "#/components/schemas/CostsPerPlan"
+            }
+          }
+        }
+      },
+      "CostsPerPlan": {
+        "type":"object",
+        "properties": {
+          "pricePlanId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "MeterReading": {
+        "type":"object",
+        "properties": {
+          "smartMeterId": {
+            "type": "string"
+          },
+          "readings" : {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ElectricityReading"
+            }
+          }
+        },
+        "required": ["smartMeterId", "readings"]
+      },
+      "ElectricityReading": {
+        "type": "object",
+        "description": "A reading from a smart meter at a certain point in time.",
+        "properties": {
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reading": {
+            "type": "number",
+            "format": "int64"
+          }
+        }
+      },
+      "EpochElectricityReading" : {
+        "type": "object",
+        "description": "A reading from a smart meter in epoch time format.",
+        "properties": {
+          "time": {
+            "type": "number",
+            "format": "double"
+          },
+          "reading": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://0.0.0.0:8080"
+    }
+  ],
+  "paths": {
+    "/price-plans/recommend/{smartMeterId}": {
+      "get": {
+        "description": "Get a recommendation for the cheapest price plan.",
+        "parameters": [
+          {
+            "name": "smartMeterId",
+            "in": "path",
+            "description": "The identifier of the smart meter.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The maximal number of recommendations.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PricePlanRecommendation"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/price-plans/compare-all/{smartMeterId}": {
+      "get": {
+        "description": "Get costs for the different price plans.",
+        "parameters": [
+          {
+            "name": "smartMeterId",
+            "in": "path",
+            "description": "The identifier of the smart meter.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The comparison of price plans for the id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref" : "#/components/schemas/CostsPerPlan"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The smart meter id has not been found."
+          }
+        }
+      }
+    },
+    "/readings/store": {
+      "post": {
+        "description": "Store readings for a smart meter.",
+        "requestBody": {
+          "content": {
+            "application/json" : {
+              "schema": {
+                "$ref": "#/components/schemas/MeterReading"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/readings/read/{smartMeterId}": {
+      "get": {
+        "description": "Get the readings from a smart meter by its identifier.",
+        "parameters": [
+          {
+            "name": "smartMeterId",
+            "in": "path",
+            "description": "The identifier of the smart meter.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of readings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EpochElectricityReading"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Smart meter id is not found."
+          }
+        }
+      }
+    }
+  }
+}
