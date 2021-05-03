@@ -19,6 +19,7 @@
     },
     "schemas": {
       "PricePlanRecommendation": {
+        "description": "The consumption costs (second) for an energy provider (first).",
         "type":"object",
         "properties": {
           "first": {
@@ -30,26 +31,26 @@
         }
       },
       "PricePlanComparison": {
+        "description": "A comparison of the costs for a smart meter determined by different energy providers.",
         "type":"object",
         "properties": {
-          "smartMeterId": {
+          "pricePlanId": {
             "type": "string"
           },
           "pricePlanComparisons": {
-            "type": "object",
-            "additionalProperties" :{
               "$ref": "#/components/schemas/CostsPerPlan"
-            }
           }
         }
       },
       "CostsPerPlan": {
         "type":"object",
-        "properties": {
-          "pricePlanId": {
+        "additionalProperties": {
             "type": "integer",
             "format": "int64"
-          }
+        },
+        "example": {
+          "price-plan-0": 123321.13,
+          "price-plan-1": 24214.12
         }
       },
       "MeterReading": {
@@ -61,7 +62,15 @@
           "readings" : {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ElectricityReading"
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ElectricityReading"
+                },
+                {
+                  "$ref": "#/components/schemas/EpochElectricityReading"
+                }
+              ]
+
             }
           }
         },
@@ -69,14 +78,14 @@
       },
       "ElectricityReading": {
         "type": "object",
-        "description": "A reading from a smart meter at a certain point in time.",
+        "description": "A reading from a smart meter in date-time format.",
         "properties": {
           "time": {
             "type": "string",
             "format": "date-time"
           },
           "reading": {
-            "type": "number",
+            "type": "integer",
             "format": "int64"
           }
         }
@@ -162,7 +171,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref" : "#/components/schemas/CostsPerPlan"
+                  "$ref" : "#/components/schemas/PricePlanComparison"
                 }
               }
             }
@@ -180,7 +189,7 @@
           "content": {
             "application/json" : {
               "schema": {
-                "$ref": "#/components/schemas/MeterReading"
+                "$ref" : "#/components/schemas/MeterReading"
               }
             }
           }
